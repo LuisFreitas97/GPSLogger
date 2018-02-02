@@ -41,51 +41,17 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        if(!locationManager.isProviderEnabled( LocationManager.GPS_PROVIDER ))//Caso o gps não esteja ligado.
-        {
-            Toast.makeText(this, "GPS desligado, ligue por favor", Toast.LENGTH_LONG).show();
-        }
-        else    //Caso o GPS esteja ligado
-        {
             if (checkPermission())
             {
-                Toast.makeText(this, "GPS ligado, permissão concedida", Toast.LENGTH_LONG).show();
+               // Toast.makeText(this, "GPS ligado, permissão concedida", Toast.LENGTH_LONG).show();
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_UPDATES, DISTANCE_UPDATES, this);
             }
             else
             {
-                Toast.makeText(this, "GPS ligado, permissão não concedida", Toast.LENGTH_LONG).show();
+               // Toast.makeText(this, "GPS ligado, permissão não concedida", Toast.LENGTH_LONG).show();
                 requestPermission();
             }
-        }
     }
-
-    public void handleDebugClick(View v){
-        Log.i("DEGUG","Debug clicked...");
-        LocationAvailable = false;
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        if(!locationManager.isProviderEnabled( LocationManager.GPS_PROVIDER ))//Caso o gps não esteja ligado.
-        {
-            Toast.makeText(this, "GPS desligado, ligue por favor", Toast.LENGTH_LONG).show();
-        }
-        else    //Caso o GPS esteja ligado
-        {
-            if (checkPermission())
-            {
-                Toast.makeText(this, "GPS ligado, permissão concedida", Toast.LENGTH_LONG).show();
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_UPDATES, DISTANCE_UPDATES, this);
-            }
-            else
-            {
-                Toast.makeText(this, "GPS ligado, permissão não concedida", Toast.LENGTH_LONG).show();
-                requestPermission();
-            }
-        }
-    }
-
-
     /**
      * Monitor for location changes
      * @param location holds the new location
@@ -218,11 +184,5 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
                 }
                 break;
         }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Toast.makeText(this,"sdfsdf",Toast.LENGTH_LONG).show();
     }
 }
