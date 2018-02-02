@@ -78,7 +78,7 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
     {
         if (checkPermission())
         {
-            Toast.makeText(this, "Desligou GPS", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Desligou GPS, ligue por favor", Toast.LENGTH_LONG).show();
            // locationManager.removeUpdates(this);
         }
         else
