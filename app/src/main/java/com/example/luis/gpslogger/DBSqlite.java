@@ -57,19 +57,20 @@ public class DBSqlite extends SQLiteOpenHelper {
         }
     }
 
-
-
-
-    public long insertData(double longitude,double latitude,String dataEhora)
+    public String getLongitude()
     {
-        SQLiteDatabase dbb = new DBSqlite(context).getWritableDatabase();
-
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(DBSqlite.longitude, longitude);
-        contentValues.put(DBSqlite.latitude, latitude);
-        contentValues.put(DBSqlite.dataEhora,dataEhora);
-        long id = dbb.insert(DBSqlite.TABLE_NAME, null , contentValues);
-        return id;
+        return longitude;
     }
-
+    public String getLatitude()
+    {
+        return latitude;
+    }
+    public String getDataEhora()
+    {
+        return dataEhora;
+    }
+    public String getTABLE_NAME()
+    {
+        return TABLE_NAME;
+    }
 }

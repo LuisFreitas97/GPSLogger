@@ -34,14 +34,14 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
     private boolean LocationAvailable;
     private TextView latitudeText,longitudeText,dateTimeText;
 
-    private DBSqlite db;
+    private DbOperacoes db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_location_activity);
 
-        db=new DBSqlite(this);
+        db=new DbOperacoes(this);
         LocationAvailable = false;
 
         latitudeText = (TextView)findViewById(R.id.latitudeText);
