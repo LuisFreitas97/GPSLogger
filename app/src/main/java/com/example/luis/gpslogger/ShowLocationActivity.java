@@ -31,6 +31,7 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
     private final static int TIME_UPDATES = 5;
     private static final int PERMISSION_REQUEST_CODE = 1;
     private boolean LocationAvailable;
+    private TextView latitudeText,longitudeText,dateTimeText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +39,10 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
         setContentView(R.layout.activity_show_location_activity);
 
         LocationAvailable = false;
+
+        latitudeText = (TextView)findViewById(R.id.latitudeText);
+        longitudeText = (TextView)findViewById(R.id.longitudeText);
+        dateTimeText = (TextView)findViewById(R.id.dateTimeText);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -59,10 +64,6 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
     @Override
     public void onLocationChanged(Location location)
     {
-        TextView latitudeText = (TextView)findViewById(R.id.latitudeText);
-        TextView longitudeText = (TextView)findViewById(R.id.longitudeText);
-        TextView dateTimeText = (TextView)findViewById(R.id.dateTimeText);
-
         latitudeText.setText(String.valueOf(location.getLatitude()));
         longitudeText.setText(String.valueOf(location.getLongitude()));
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
