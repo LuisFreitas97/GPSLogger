@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -33,11 +34,14 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
     private boolean LocationAvailable;
     private TextView latitudeText,longitudeText,dateTimeText;
 
+    private DBSqlite db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_location_activity);
 
+        db=new DBSqlite(this);
         LocationAvailable = false;
 
         latitudeText = (TextView)findViewById(R.id.latitudeText);
@@ -68,6 +72,17 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
         longitudeText.setText(String.valueOf(location.getLongitude()));
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
         dateTimeText.setText(date);
+        long verif=db.insertData(location.getLatitude(),location.getLongitude(),date);
+
+        if(verif>0)
+        {
+            Toast.makeText(this, "Dados guardados "+date, Toast.LENGTH_LONG).show();
+        }
+        else
+        {
+            Toast.makeText(this, "Dados não guardados", Toast.LENGTH_LONG).show();
+        }
+
     }
 
     /**
