@@ -34,14 +34,14 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
     private boolean LocationAvailable;
     private TextView latitudeText,longitudeText,dateTimeText;
 
-    private DbOperacoes db;
+    private DBSqlite db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_location_activity);
 
-        db=new DbOperacoes(this);
+        db=new DBSqlite(this);
         LocationAvailable = false;
 
         latitudeText = (TextView)findViewById(R.id.latitudeText);
@@ -61,6 +61,12 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
                 requestPermission();
             }
     }
+
+    public void listar(View v)
+    {
+        Toast.makeText(this, db.buscaDados(), Toast.LENGTH_LONG).show();
+        System.out.println(db.buscaDados());
+    }
     /**
      * Monitor for location changes
      * @param location holds the new location
@@ -72,7 +78,7 @@ public class ShowLocationActivity extends AppCompatActivity implements LocationL
         longitudeText.setText(String.valueOf(location.getLongitude()));
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
         dateTimeText.setText(date);
-        long verif=db.insertData(location.getLatitude(),location.getLongitude(),date);
+        long verif=db.inserirDados(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),date);
 
         if(verif>0)
         {

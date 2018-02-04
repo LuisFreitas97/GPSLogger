@@ -2,6 +2,7 @@ package com.example.luis.gpslogger;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.Toast;
@@ -12,16 +13,16 @@ import android.widget.Toast;
 
 public class DBSqlite extends SQLiteOpenHelper {
 
-    private static final String DATABASE_NAME = "myDatabase";    // Database Name
-    private static final String TABLE_NAME = "myTable";   // Table Name
-    private static final int DATABASE_Version = 1;   // Database Version
-    private static final String longitude="longitude";
-    private static final String latitude="latitude";
-    private static final String dataEhora="dataEhora";
+    private static final String DATABASE_NAME = "myDatabase";
+    private static final String TABLE_NAME = "myTable";
+    private static final int DATABASE_Version = 1;
+    private static final String LONGITUDE="longitude";
+    private static final String LATITUDE="latitude";
+    private static final String DATAEHORA="dataEhora";
     private static final String ID="ID";
     private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+
-            " ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+longitude+" DOUBLE ,"+ latitude+" DOUBLE ," +
-            dataEhora+" VARCHAR(45) "+");";
+            " ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+LONGITUDE+" VARCHAR(45) ,"+ LATITUDE+" VARCHAR(45) ," +
+            DATAEHORA+" VARCHAR(45) "+");";
     private static final String DROP_TABLE ="DROP TABLE IF EXISTS "+TABLE_NAME;
     private Context context;
 
@@ -32,45 +33,39 @@ public class DBSqlite extends SQLiteOpenHelper {
 
     public void onCreate(SQLiteDatabase db)
     {
-        try
-        {
             db.execSQL(CREATE_TABLE);
-        }
-        catch (Exception e)
-        {
-
-        }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
     {
-        try
-        {
-           // Message.message(context,"OnUpgrade");
-            db.execSQL(DROP_TABLE);
-            onCreate(db);
-        }
-        catch (Exception e)
-        {
-            //Message.message(context,""+e);
-        }
+
     }
 
-    public String getLongitude()
+    public long inserirDados(String longitude,String latitude,String dataEhora)
     {
-        return longitude;
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(LONGITUDE, longitude);
+        contentValues.put(LATITUDE, latitude);
+        contentValues.put(DATAEHORA,dataEhora);
+        long id = getWritableDatabase().insert(TABLE_NAME, null , contentValues);
+        return id;
     }
-    public String getLatitude()
+
+    public String buscaDados()
     {
-        return latitude;
-    }
-    public String getDataEhora()
-    {
-        return dataEhora;
-    }
-    public String getTABLE_NAME()
-    {
-        return TABLE_NAME;
+        String[] columns = {ID,LONGITUDE,LATITUDE,DATAEHORA};
+        Cursor cursor =getReadableDatabase().query(TABLE_NAME,columns,null,null,null,null,null);
+
+        String buffer="";
+        while (cursor.moveToNext())
+        {
+            int cid =cursor.getInt(cursor.getColumnIndex(ID));
+            String longitude =cursor.getString(cursor.getColumnIndex(LONGITUDE));
+            String  latitude =cursor.getString(cursor.getColumnIndex(LATITUDE));
+            String  dataEhora =cursor.getString(cursor.getColumnIndex(DATAEHORA));
+            buffer+=dataEhora;
+        }
+        return buffer;
     }
 }
