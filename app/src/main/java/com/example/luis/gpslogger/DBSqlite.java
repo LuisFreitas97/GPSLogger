@@ -31,11 +31,13 @@ public class DBSqlite extends SQLiteOpenHelper {
         this.context=context;
     }
 
+    //Usado para criar a DB apenas na primeira vez
     public void onCreate(SQLiteDatabase db)
     {
             db.execSQL(CREATE_TABLE);
     }
 
+    //Usado para alterar a estrutura da DB, por exemplo adicionar uma tabela.
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
     {
