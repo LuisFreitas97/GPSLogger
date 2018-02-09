@@ -33,7 +33,6 @@ public class GpsService extends Service implements LocationListener{
     private final static int TIME_UPDATES = 5;
     private static final int PERMISSION_REQUEST_CODE = 1;
     private boolean LocationAvailable;
-    private TextView latitudeText,longitudeText,dateTimeText;
 
     private DBSqlite db;
 

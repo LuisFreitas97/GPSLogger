@@ -14,6 +14,7 @@ public class StartAndStopService extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_service);
         intent= new Intent(this,GpsService.class);
+        DBManager db =DBManager.getDBManager();
     }
 
     public void iniciarServico(View v)
