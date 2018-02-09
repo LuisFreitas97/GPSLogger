@@ -58,14 +58,10 @@ public class GpsService extends Service implements LocationListener{
     //este método é chamado apenas uma vez antes do serviço se iniciar.
     @Override
     public void onCreate() {
-        super.onCreate();
 
+        super.onCreate();
         db=new DBSqlite(this);
         LocationAvailable = false;
-
-        /*latitudeText = (TextView)findViewById(R.id.latitudeText);
-        longitudeText = (TextView)findViewById(R.id.longitudeText);
-        dateTimeText = (TextView)findViewById(R.id.dateTimeText);*/
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -101,10 +97,7 @@ public class GpsService extends Service implements LocationListener{
     @Override
     public void onLocationChanged(Location location)
     {
-        /*latitudeText.setText(String.valueOf(location.getLatitude()));
-        longitudeText.setText(String.valueOf(location.getLongitude()));*/
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
-        //dateTimeText.setText(date);
         long verif=db.inserirDados(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),date);
 
         if(verif>0)
@@ -128,7 +121,6 @@ public class GpsService extends Service implements LocationListener{
         if (checkPermission())
         {
             Toast.makeText(this, "Desligou GPS, ligue por favor", Toast.LENGTH_LONG).show();
-            // locationManager.removeUpdates(this);
         }
         else
         {
