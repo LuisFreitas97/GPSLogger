@@ -3,6 +3,7 @@ package com.example.luis.gpslogger;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 public class StartAndStopService extends AppCompatActivity {
@@ -13,15 +14,16 @@ public class StartAndStopService extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_service);
-        intent= new Intent(this,GpsService.class);
-        DBManager db =DBManager.getDBManager();
+
+        //intent= new Intent(this,GpsService.class);
     }
 
     public void iniciarServico(View v)
     {
         //Intent intent = new Intent(this, GpsService.class);
+        intent= new Intent(this,GpsService.class);
         startService(intent);
-        startActivity(new Intent(StartAndStopService.this, ShowLocationActivity.class));
+        //startActivity(new Intent(StartAndStopService.this, ShowLocationActivity.class));
     }
 
     public void pararServico(View v)

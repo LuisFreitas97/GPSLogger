@@ -14,6 +14,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,7 +35,8 @@ public class GpsService extends Service implements LocationListener{
     private static final int PERMISSION_REQUEST_CODE = 1;
     private boolean LocationAvailable;
 
-    private DBSqlite db;
+    //private DBSqlite db;
+    private DBManager db;
 
     //O serviço chama este método quando outro componente da aplicação inicia o serviço chamando o
     //método StartAndStopService() iniciando o serviço em segundo plano indefinidamente até ser chamado o
@@ -59,7 +61,20 @@ public class GpsService extends Service implements LocationListener{
     public void onCreate() {
 
         super.onCreate();
-        db=new DBSqlite(this);
+        //db=new DBSqlite(this);
+
+
+
+        if(!DBManager.databaseExists())
+        {
+            DBManager.initDatabase();
+        }
+        else
+        {
+            Log.i("sdf","Database já existe");
+        }
+        db =DBManager.getDBManager();
+
         LocationAvailable = false;
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -80,14 +95,17 @@ public class GpsService extends Service implements LocationListener{
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopSelf();
+        Toast.makeText(this,"Serviço parado", Toast.LENGTH_LONG).show();
+        locationManager.removeUpdates(this);
     }
 
     //Implementação da interface LocationService
 
     public void listar(View v)
     {
-        Toast.makeText(this, db.buscaDados(), Toast.LENGTH_LONG).show();
-        System.out.println(db.buscaDados());
+        //Toast.makeText(this, db.buscaDados(), Toast.LENGTH_LONG).show();
+        //System.out.println(db.buscaDados());
     }
     /**
      * Monitor for location changes
@@ -97,15 +115,16 @@ public class GpsService extends Service implements LocationListener{
     public void onLocationChanged(Location location)
     {
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
-        long verif=db.inserirDados(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),date);
-
-        if(verif>0)
+        //long verif=db.inserirDados(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),date);
+        boolean verif=db.insertData(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),date);
+        //location.getAltitude()
+        if(verif)
         {
-            Toast.makeText(this, "Dados guardados "+date, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Dados guardados "+date, Toast.LENGTH_SHORT).show();
         }
         else
         {
-            Toast.makeText(this, "Dados não guardados", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Dados não guardados", Toast.LENGTH_SHORT).show();
         }
 
     }

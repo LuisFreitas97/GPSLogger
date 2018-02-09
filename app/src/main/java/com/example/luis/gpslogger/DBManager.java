@@ -4,16 +4,15 @@ package com.example.luis.gpslogger;
  * Created by luis on 09-02-2018.
  */
 
-    import android.content.ContentValues;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Calendar;
 
     public final class DBManager {
 
@@ -36,9 +35,9 @@ import java.util.Calendar;
 
         public DBManager() {
 
-            File test  = new File(Environment.getExternalStorageDirectory() + "/documents/");
-            String[] test2 = test.list();
-            Log.i("zxc",test2.toString());
+            //File test  = new File(Environment.getExternalStorageDirectory() + "/documents/");
+            //String[] test2 = test.list();
+
             try {
                 if (db == null)
                     db = SQLiteDatabase.openDatabase(
@@ -69,13 +68,14 @@ import java.util.Calendar;
 
         public static void initDatabase() {
             try {
-                File db_storage_file = new File(Environment.getExternalStorageDirectory(), "/GPSlogger/");
-                if (!db_storage_file.exists())
+                File db_storage_file = new File(Environment.getExternalStorageDirectory(), "/GPSlogger");
+                if (!db_storage_file.exists()) {
                     if (!db_storage_file.mkdir()) {
-                        //Log.e(MODULE,"error creating /touchCloud directory");
+                        Log.e(MODULE, "error creating /GPSLogger directory");
                         return;
                     }
-                db_storage_file = new File(db_storage_file, DATABASE_NAME);
+                    db_storage_file = new File(db_storage_file, DATABASE_NAME);
+                }
 
                 if (!db_storage_file.exists()) {
                     db_storage_file.createNewFile();
@@ -97,5 +97,49 @@ import java.util.Calendar;
 
 
             db.execSQL(CREATE_TABLE);
+        }
+
+        public synchronized boolean insertData(String longitude, String latitude, String dataEhora)
+        {
+
+            SQLiteStatement stm = null;
+            boolean res=false;
+            db.beginTransaction();
+
+            try{
+
+            String sql="";
+                sql="Insert Into myTable(longitude,latitude,dataEhora) values('"+longitude+"','"+latitude+"','"+dataEhora+"')";
+                stm = db.compileStatement(sql);
+                Log.i("sdf",sql);
+                if (stm.executeInsert() <= 0)
+                {
+                    Log.i(MODULE, "Failed insertion of appliance into database");
+                }
+                /*else
+                {
+                    sql="SELECT * FROM myTable";
+                    stm = db.compileStatement(sql);
+                    stm.execute();
+
+                    Cursor c;
+
+                }*/
+                    // Signal success and update result value
+
+                    res = true;
+
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            res=false;
+            e.printStackTrace();
+        } finally	{
+            stm.close();
+            db.endTransaction();
+            Log.d(MODULE, "new appliance data inserted");
+
+        }
+
+            return true;
         }
     }
