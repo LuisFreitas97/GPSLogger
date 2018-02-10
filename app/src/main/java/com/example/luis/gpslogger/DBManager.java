@@ -23,10 +23,11 @@ import java.io.File;
         private static final int DATABASE_Version = 1;
         private static final String LONGITUDE="longitude";
         private static final String LATITUDE="latitude";
+        private static final String ALTITUDE="altitude";
         private static final String DATAEHORA="dataEhora";
         private static final String ID="ID";
         private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+
-                " ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+LONGITUDE+" VARCHAR(45) ,"+ LATITUDE+" VARCHAR(45) ," +
+                " ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+LONGITUDE+" VARCHAR(45) ,"+ LATITUDE+" VARCHAR(45) ," +ALTITUDE+" VARCHAR(45) ,"+
                 DATAEHORA+" VARCHAR(45) "+");";
 
         private static SQLiteDatabase db;
@@ -99,7 +100,7 @@ import java.io.File;
             db.execSQL(CREATE_TABLE);
         }
 
-        public synchronized boolean insertData(String longitude, String latitude, String dataEhora)
+        public synchronized boolean insertData(String longitude, String latitude,String altitude, String dataEhora)
         {
 
             SQLiteStatement stm = null;
@@ -109,25 +110,14 @@ import java.io.File;
             try{
 
             String sql="";
-                sql="Insert Into myTable(longitude,latitude,dataEhora) values('"+longitude+"','"+latitude+"','"+dataEhora+"')";
+                sql="Insert Into myTable('"+LONGITUDE+"','"+LATITUDE+"','"+ALTITUDE+"','"+DATAEHORA+"') values('"+longitude+"','"+latitude+"','"+altitude+"','"+dataEhora+"')";
                 stm = db.compileStatement(sql);
                 Log.i("sdf",sql);
                 if (stm.executeInsert() <= 0)
                 {
                     Log.i(MODULE, "Failed insertion of appliance into database");
                 }
-                /*else
-                {
-                    sql="SELECT * FROM myTable";
-                    stm = db.compileStatement(sql);
-                    stm.execute();
-
-                    Cursor c;
-
-                }*/
-                    // Signal success and update result value
-
-                    res = true;
+                res = true;
 
             db.setTransactionSuccessful();
         } catch (Exception e) {

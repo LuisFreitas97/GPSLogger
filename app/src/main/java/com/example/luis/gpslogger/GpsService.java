@@ -121,9 +121,9 @@ public class GpsService extends Service implements LocationListener{
     public void onLocationChanged(Location location)
     {
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
-        //long verif=db.inserirDados(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),date);
-        boolean verif=db.insertData(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),date);
-        //location.getAltitude()
+
+        boolean verif=db.insertData(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),String.valueOf(location.getAltitude()),date);
+
         if(verif)
         {
             Toast.makeText(this, "Dados guardados "+date, Toast.LENGTH_SHORT).show();
