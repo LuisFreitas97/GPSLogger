@@ -37,6 +37,7 @@ public class GpsService extends Service implements LocationListener{
 
     //private DBSqlite db;
     private DBManager db;
+    private static boolean servicoIniciado=false;
 
     //O serviço chama este método quando outro componente da aplicação inicia o serviço chamando o
     //método StartAndStopService() iniciando o serviço em segundo plano indefinidamente até ser chamado o
@@ -44,6 +45,7 @@ public class GpsService extends Service implements LocationListener{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(this, "Serviço iniciado.", Toast.LENGTH_LONG).show();
+        servicoIniciado=true;
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -62,8 +64,6 @@ public class GpsService extends Service implements LocationListener{
 
         super.onCreate();
         //db=new DBSqlite(this);
-
-
 
         if(!DBManager.databaseExists())
         {
@@ -97,7 +97,13 @@ public class GpsService extends Service implements LocationListener{
         super.onDestroy();
         stopSelf();
         Toast.makeText(this,"Serviço parado", Toast.LENGTH_LONG).show();
+        servicoIniciado=false;
         locationManager.removeUpdates(this);
+    }
+
+    public static boolean getServicoIniciado()
+    {
+        return servicoIniciado;
     }
 
     //Implementação da interface LocationService
