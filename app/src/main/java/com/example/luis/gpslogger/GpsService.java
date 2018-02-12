@@ -6,10 +6,12 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -21,12 +23,14 @@ import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by luis on 05-02-2018.
  */
 
-public class GpsService extends Service implements LocationListener{
+public class GpsService extends Service implements LocationListener {
 
     // Location Variables
     private LocationManager locationManager;
@@ -37,7 +41,55 @@ public class GpsService extends Service implements LocationListener{
 
     //private DBSqlite db;
     private DBManager db;
-    private static boolean servicoIniciado=false;
+    private static boolean servicoIniciado = false;
+
+    Timer timer;
+    TimerTask timerTask;
+    private String longitude,latitude,altitude,data;
+
+    //we are going to use a handler to be able to run in our TimerTask
+    final Handler handler = new Handler();
+
+    public void startTimer() {
+        //set a new Timer
+        timer = new Timer();
+        //initialize the TimerTask's job
+        initializeTimerTask();
+        //schedule the timer, after the first 5000ms the TimerTask will run every 10000ms
+        timer.schedule(timerTask, 5000, 10000); //
+    }
+
+    public void stoptimertask() {
+        //stop the timer, if it's not already null
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
+    public void initializeTimerTask() {
+        timerTask = new TimerTask() {
+            public void run() {
+                //use a handler to run a toast that shows the current timestamp
+                handler.post(new Runnable() {
+                    public void run() {
+                        boolean verif=false;
+
+                        if(data!=null) {
+                            verif = db.insertData(latitude, longitude, altitude, data);
+                        }
+                        if(verif)
+                        {
+                            Toast.makeText(getApplicationContext(), "Dados guardados "+data, Toast.LENGTH_SHORT).show();
+                        }
+                        else {
+                            Toast.makeText(getApplicationContext(), "Dados não guardados", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        };
+    }
 
     //O serviço chama este método quando outro componente da aplicação inicia o serviço chamando o
     //método StartAndStopService() iniciando o serviço em segundo plano indefinidamente até ser chamado o
@@ -45,7 +97,7 @@ public class GpsService extends Service implements LocationListener{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(this, "Serviço iniciado.", Toast.LENGTH_LONG).show();
-        servicoIniciado=true;
+        servicoIniciado = true;
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -63,26 +115,21 @@ public class GpsService extends Service implements LocationListener{
     public void onCreate() {
 
         super.onCreate();
-        //db=new DBSqlite(this);
 
-        if(!DBManager.databaseExists())
-        {
+        if (!DBManager.databaseExists()) {
             DBManager.initDatabase();
+        } else {
+            Log.i("sdf", "Database já existe");
         }
-        else
-        {
-            Log.i("sdf","Database já existe");
-        }
-        db =DBManager.getDBManager();
+        db = DBManager.getDBManager();
 
         LocationAvailable = false;
-
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         if (checkPermission())
         {
-            // Toast.makeText(this, "GPS ligado, permissão concedida", Toast.LENGTH_LONG).show();
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_UPDATES, DISTANCE_UPDATES, this);
+            startTimer();
         }
         else
         {
@@ -98,6 +145,7 @@ public class GpsService extends Service implements LocationListener{
         stopSelf();
         Toast.makeText(this,"Serviço parado", Toast.LENGTH_LONG).show();
         servicoIniciado=false;
+        stoptimertask();
         locationManager.removeUpdates(this);
     }
 
@@ -108,31 +156,17 @@ public class GpsService extends Service implements LocationListener{
 
     //Implementação da interface LocationService
 
-    public void listar(View v)
-    {
-        //Toast.makeText(this, db.buscaDados(), Toast.LENGTH_LONG).show();
-        //System.out.println(db.buscaDados());
-    }
     /**
      * Monitor for location changes
      * @param location holds the new location
      */
-    @Override
+   @Override
     public void onLocationChanged(Location location)
     {
-        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
-
-        boolean verif=db.insertData(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),String.valueOf(location.getAltitude()),date);
-
-        if(verif)
-        {
-            Toast.makeText(this, "Dados guardados "+date, Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
-            Toast.makeText(this, "Dados não guardados", Toast.LENGTH_SHORT).show();
-        }
-
+        data= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
+        longitude=String.valueOf(location.getLongitude());
+        latitude=String.valueOf(location.getLatitude());
+        altitude=String.valueOf(location.getAltitude());
     }
 
     /**
