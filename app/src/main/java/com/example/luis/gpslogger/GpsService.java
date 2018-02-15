@@ -43,34 +43,32 @@ public class GpsService extends Service implements LocationListener {
     private DBManager db;
     private static boolean servicoIniciado = false;
 
-    Timer timer;
-    TimerTask timerTask;
+    private Timer timer;    //Timer
+    private TimerTask timerTask;    //Ação que irá ser desempenhada de x em x tempo.
     private String longitude,latitude,altitude,data;
-
-    //we are going to use a handler to be able to run in our TimerTask
-    final Handler handler = new Handler();
+    private final Handler handler = new Handler();
 
     public void startTimer() {
-        //set a new Timer
+        //Cria o timer
         timer = new Timer();
-        //initialize the TimerTask's job
+        //inicializa o trabalho que irá ser desempenhado pelo timerTask.
         initializeTimerTask();
-        //schedule the timer, after the first 5000ms the TimerTask will run every 10000ms
+        //o timerTask vai executar-se depois dos primeiros 5000ms e depois a cada 10000ms.
         timer.schedule(timerTask, 5000, 10000); //
     }
 
     public void stoptimertask() {
-        //stop the timer, if it's not already null
+        //para o timer se este ainda estiver em execução
         if (timer != null) {
             timer.cancel();
             timer = null;
         }
     }
 
+    //Tarefa que é executada de x em x tempo do timer
     public void initializeTimerTask() {
         timerTask = new TimerTask() {
             public void run() {
-                //use a handler to run a toast that shows the current timestamp
                 handler.post(new Runnable() {
                     public void run() {
                         boolean verif=false;
