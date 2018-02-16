@@ -4,16 +4,36 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 public class ShowLocationActivity extends AppCompatActivity{
+
+    private int idViagem;
+    private double distanciaKm;
+    private TextView autonomiaText,idViagemText,percentagemBatText,distanciaKmText;
+    private Button bCarregarBat;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_location_activity);
-    }
+        distanciaKmText=findViewById(R.id.distanciaText);
+        idViagemText=findViewById(R.id.idViagem);
+        autonomiaText=findViewById(R.id.autonomiaText);
+        percentagemBatText=findViewById(R.id.percentagemBat);
+        bCarregarBat=findViewById(R.id.bIniciarCarregamento);
 
-    public void voltar(View v)
-    {
-        startActivity(new Intent(ShowLocationActivity.this, StartAndStopService.class));
+        autonomiaText.setText("Autonomia restante: X%");
+        percentagemBatText.setText("Percentagem de bateria atual: X%");
+
+        //Buscamos os valores que veem no intent
+        idViagem=getIntent().getIntExtra("idViagem",0);
+        idViagemText.setText("Id da última viagem: "+Integer.toString(idViagem));
+
+        distanciaKm=getIntent().getDoubleExtra("distanciaKm",0);
+        distanciaKmText.setText("Distância percorrida na última viagem: "+Double.toString(distanciaKm)+" Km");
     }
 }

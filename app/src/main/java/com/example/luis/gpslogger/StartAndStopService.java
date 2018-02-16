@@ -18,11 +18,15 @@ public class StartAndStopService extends AppCompatActivity {
         setContentView(R.layout.activity_start_service);
 
         intent = new Intent(this, GpsService.class);
-        Log.i("sdf",intent.toString());
+
+        //Para calcular os km de distância entre o ponto de partida e o de chegada.
+       /* double d=GpsService.getDistanceFromLatLonInKm("32.67731306","-17.06042571","32.66787549","-17.05150265");
+        Toast.makeText(this,Double.toString(d)+"Km",Toast.LENGTH_LONG).show();*/
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onDestroy()
+    {
         super.onDestroy();
 
         if(intent!=null) //Apenas paramos o serviço se este estiver a ser executado.
@@ -36,7 +40,7 @@ public class StartAndStopService extends AppCompatActivity {
         if(!GpsService.getServicoIniciado())//Para iniciar só o serviço quando este ainda não foi iniciado.
         {
             startService(intent);
-            startActivity(new Intent(StartAndStopService.this, ShowLocationActivity.class));
+            //startActivity(new Intent(StartAndStopService.this, ShowLocationActivity.class));
         }
         else
         {
@@ -48,7 +52,18 @@ public class StartAndStopService extends AppCompatActivity {
     {
         if(intent!=null)
         {
+            double kmViagem=0;
+            //Calcula os kms da última viagem
+            //Toast.makeText(this,Integer.toString(GpsService.getIdViagem()),Toast.LENGTH_LONG).show();
+            int idViagem=GpsService.getIdViagem();
+            kmViagem=DBManager.calculaKmViagem(idViagem);
             stopService(intent);
+
+            //Começamos a nova actividade que irá mostrar os kms, bateria, carregar etc
+            Intent intentPrincipal=new Intent(StartAndStopService.this,ShowLocationActivity.class);
+            intentPrincipal.putExtra("distanciaKm", kmViagem);
+            intentPrincipal.putExtra("idViagem",idViagem);
+            startActivity(intentPrincipal);
         }
     }
 }

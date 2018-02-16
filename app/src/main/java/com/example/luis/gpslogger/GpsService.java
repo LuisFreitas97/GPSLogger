@@ -42,10 +42,11 @@ public class GpsService extends Service implements LocationListener {
     //private DBSqlite db;
     private DBManager db;
     private static boolean servicoIniciado = false;
+    private static int viagemId=0;
 
     private Timer timer;    //Timer
     private TimerTask timerTask;    //Ação que irá ser desempenhada de x em x tempo.
-    private String longitude,latitude,altitude,data;
+    private String longitude,latitude,altitude,data,longitudeAnterior;
     private final Handler handler = new Handler();
 
     public void startTimer() {
@@ -53,8 +54,8 @@ public class GpsService extends Service implements LocationListener {
         timer = new Timer();
         //inicializa o trabalho que irá ser desempenhado pelo timerTask.
         initializeTimerTask();
-        //o timerTask vai executar-se depois dos primeiros 5000ms e depois a cada 10000ms.
-        timer.schedule(timerTask, 5000, 10000); //
+        //o timerTask vai executar-se depois dos primeiros 5000ms e depois a cada 30000ms.
+        timer.schedule(timerTask, 5000, 30000); //
     }
 
     public void stoptimertask() {
@@ -71,16 +72,22 @@ public class GpsService extends Service implements LocationListener {
             public void run() {
                 handler.post(new Runnable() {
                     public void run() {
-                        boolean verif=false;
 
-                        if(data!=null) {
-                            verif = db.insertData(latitude, longitude, altitude, data);
+                        boolean verif=false;
+                        Toast.makeText(getApplicationContext(),data,Toast.LENGTH_SHORT).show();
+                        //Caso a a longitude actual seja diferente da anterior e o gps já tenha captado alguma
+                        //localização
+                        if(data!=null && !longitude.equals(longitudeAnterior))
+                        {
+                            verif = db.insertData(longitude, latitude, altitude, data,Integer.toString(viagemId));
+                            longitudeAnterior=longitude;//Guardamos o valor da longitude anterior
                         }
                         if(verif)
                         {
                             Toast.makeText(getApplicationContext(), "Dados guardados "+data, Toast.LENGTH_SHORT).show();
                         }
-                        else {
+                        else
+                        {
                             Toast.makeText(getApplicationContext(), "Dados não guardados", Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -89,11 +96,33 @@ public class GpsService extends Service implements LocationListener {
         };
     }
 
+    /*Passar de coordenadas para graus*/
+
+    public static double getDistanceFromLatLonInKm(String lat1,String lon1,String lat2,String lon2)
+    {
+        int R = 6371; // Raio da Terra em km
+        double dLat = degToRad(Double.parseDouble(lat2)-Double.parseDouble(lat1));  // Graus para rad
+        double dLon = degToRad(Double.parseDouble(lon2)-Double.parseDouble(lon1));
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(degToRad(Double.parseDouble(lat1))) * Math.cos(degToRad(Double.parseDouble(lat2))) *
+                                Math.sin(dLon/2) * Math.sin(dLon/2)
+                ;
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        double d = R * c; // Distância em km.
+        return d;
+    }
+
+    public static double degToRad(double deg)
+    {
+        return deg * (Math.PI/180);
+    }
+
     //O serviço chama este método quando outro componente da aplicação inicia o serviço chamando o
     //método StartAndStopService() iniciando o serviço em segundo plano indefinidamente até ser chamado o
     //método stopService() (chamado por outro componente) ou stopSelf() (interrompido pelo próprio serviço)..
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
         Toast.makeText(this, "Serviço iniciado.", Toast.LENGTH_LONG).show();
         servicoIniciado = true;
         return super.onStartCommand(intent, flags, startId);
@@ -114,12 +143,17 @@ public class GpsService extends Service implements LocationListener {
 
         super.onCreate();
 
-        if (!DBManager.databaseExists()) {
+        if (!DBManager.databaseExists())
+        {
             DBManager.initDatabase();
-        } else {
+        }
+        else
+        {
             Log.i("sdf", "Database já existe");
         }
         db = DBManager.getDBManager();
+        viagemId=DBManager.getIdViagemAnterior();
+        viagemId++;
 
         LocationAvailable = false;
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -138,7 +172,8 @@ public class GpsService extends Service implements LocationListener {
 
     //Este método é usado para destruir o serviço.
     @Override
-    public void onDestroy() {
+    public void onDestroy()
+    {
         super.onDestroy();
         stopSelf();
         Toast.makeText(this,"Serviço parado", Toast.LENGTH_LONG).show();
@@ -191,9 +226,10 @@ public class GpsService extends Service implements LocationListener {
     @Override
     public void onProviderEnabled(String provider)
     {
-        Toast.makeText(this, "Ligou GPS", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "Ligou GPS", Toast.LENGTH_LONG).show();
         if (checkPermission())
         {
+            Toast.makeText(this, "Ligou GPS", Toast.LENGTH_LONG).show();
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_UPDATES, DISTANCE_UPDATES, this);
         }
         else
@@ -232,7 +268,6 @@ public class GpsService extends Service implements LocationListener {
      */
     private void requestPermission()
     {
-
         /**
          * Previous denials will warrant a rationale for the user to help convince them.
          */
@@ -281,5 +316,10 @@ public class GpsService extends Service implements LocationListener {
                 }
                 break;
         }
+    }
+
+    public static int getIdViagem()
+    {
+        return viagemId;
     }
 }

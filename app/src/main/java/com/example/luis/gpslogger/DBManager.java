@@ -12,9 +12,12 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.File;
+import com.google.android.gms.games.GamesMetadata;
 
-    public final class DBManager {
+import java.io.File;
+import java.util.ArrayList;
+
+public final class DBManager {
 
         private static final String MODULE = "Db Manager";
 
@@ -26,9 +29,11 @@ import java.io.File;
         private static final String ALTITUDE="altitude";
         private static final String DATAEHORA="dataEhora";
         private static final String ID="ID";
+        private static final String VIAGEMID="viagemId";
         private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+
-                " ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+LONGITUDE+" VARCHAR(45) ,"+ LATITUDE+" VARCHAR(45) ," +ALTITUDE+" VARCHAR(45) ,"+
-                DATAEHORA+" VARCHAR(45) "+");";
+                " ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+LONGITUDE+" VARCHAR(45) ,"+
+                LATITUDE+" VARCHAR(45) ," +ALTITUDE+" VARCHAR(45) ,"+
+                DATAEHORA+" VARCHAR(45) ,"+ VIAGEMID+" VARCHAR(45) "+");";
 
         private static SQLiteDatabase db;
 
@@ -94,13 +99,10 @@ import java.io.File;
                     null,
                     SQLiteDatabase.CREATE_IF_NECESSARY);
             // create anchor events table
-
-
-
             db.execSQL(CREATE_TABLE);
         }
 
-        public synchronized boolean insertData(String longitude, String latitude,String altitude, String dataEhora)
+        public synchronized boolean insertData(String longitude, String latitude,String altitude, String dataEhora,String viagemId)
         {
 
             SQLiteStatement stm = null;
@@ -110,7 +112,8 @@ import java.io.File;
             try{
 
             String sql="";
-                sql="Insert Into myTable('"+LONGITUDE+"','"+LATITUDE+"','"+ALTITUDE+"','"+DATAEHORA+"') values('"+longitude+"','"+latitude+"','"+altitude+"','"+dataEhora+"')";
+                sql="Insert Into myTable('"+LONGITUDE+"','"+LATITUDE+"','"+ALTITUDE+"','"+DATAEHORA+"','"+VIAGEMID+"') values('"+longitude+"','"+latitude+"','"+altitude+"','"+dataEhora+"','"+viagemId+"')";
+                Log.i("sdf",sql);
                 stm = db.compileStatement(sql);
                 Log.i("sdf",sql);
                 if (stm.executeInsert() <= 0)
@@ -131,5 +134,49 @@ import java.io.File;
         }
 
             return true;
+        }
+
+        public static synchronized int getIdViagemAnterior()
+        {
+            Cursor c;
+
+            c =  db.rawQuery("SELECT max(viagemId) from myTable group by viagemId", null);
+            String idViagemAnterior="";
+            while(c.moveToNext())
+            {
+                idViagemAnterior = c.getString(0); //0 é o índice da coluna
+            }
+            return Integer.parseInt(idViagemAnterior);
+        }
+
+        public static synchronized  double calculaKmViagem(int idViagem)
+        {
+            Cursor c;
+
+            c=db.rawQuery("Select longitude,latitude from myTable where viagemId='"+idViagem+"'",null);
+
+            String longAnterior="",latAnterior="", longSeguinte="",latSeguinte="";
+            double kmTotalViagem=0;
+            int i=0;
+
+            while(c.moveToNext())
+            {
+                if(i==0)
+                {
+                    longAnterior = c.getString(0);
+                    latAnterior=c.getString(1);
+                    i++;
+                }
+                else
+                {
+                    longSeguinte=c.getString(0);
+                    latSeguinte=c.getString(1);
+                    kmTotalViagem+=GpsService.getDistanceFromLatLonInKm(latAnterior,longAnterior,latSeguinte,longSeguinte);
+                    //Log.i("dsf",longAnterior+","+latAnterior+","+longSeguinte+","+latSeguinte);
+                    longAnterior=longSeguinte;
+                    latAnterior=latSeguinte;
+                }
+            }
+            return kmTotalViagem;
         }
     }
