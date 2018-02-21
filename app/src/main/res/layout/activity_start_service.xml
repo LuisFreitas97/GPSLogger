@@ -12,8 +12,8 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:text="inicar Rota"
-        android:onClick="iniciarServico"/>
+        android:onClick="iniciarServico"
+        android:text="iniciar Rota" />
 
     <Button
         android:id="@+id/button4"

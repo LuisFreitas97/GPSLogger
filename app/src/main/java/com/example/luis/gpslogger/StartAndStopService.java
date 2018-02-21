@@ -55,15 +55,23 @@ public class StartAndStopService extends AppCompatActivity {
             double kmViagem=0;
             //Calcula os kms da última viagem
             //Toast.makeText(this,Integer.toString(GpsService.getIdViagem()),Toast.LENGTH_LONG).show();
-            int idViagem=GpsService.getIdViagem();
-            kmViagem=DBManager.calculaKmViagem(idViagem);
-            stopService(intent);
 
-            //Começamos a nova actividade que irá mostrar os kms, bateria, carregar etc
-            Intent intentPrincipal=new Intent(StartAndStopService.this,ShowLocationActivity.class);
-            intentPrincipal.putExtra("distanciaKm", kmViagem);
-            intentPrincipal.putExtra("idViagem",idViagem);
-            startActivity(intentPrincipal);
+            if(GpsService.getDbManager()!=null) //Para não permitir o serviço ser parado antes de ser iniciado.
+            {
+                int idViagem=GpsService.getIdViagem();
+                kmViagem = DBManager.calculaKmViagem(idViagem);
+                stopService(intent);
+
+                //Começamos a nova actividade que irá mostrar os kms, bateria, carregar etc
+                Intent intentPrincipal = new Intent(StartAndStopService.this, ShowLocationActivity.class);
+                intentPrincipal.putExtra("distanciaKm", kmViagem);
+                intentPrincipal.putExtra("idViagem", idViagem);
+                startActivity(intentPrincipal);
+            }
+            else
+            {
+                Toast.makeText(this,"O serviço não estava activo",Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

@@ -40,7 +40,7 @@ public class GpsService extends Service implements LocationListener {
     private boolean LocationAvailable;
 
     //private DBSqlite db;
-    private DBManager db;
+    private static DBManager db;
     private static boolean servicoIniciado = false;
     private static int viagemId=0;
 
@@ -58,7 +58,8 @@ public class GpsService extends Service implements LocationListener {
         timer.schedule(timerTask, 5000, 30000); //
     }
 
-    public void stoptimertask() {
+    public void stoptimertask()
+    {
         //para o timer se este ainda estiver em execução
         if (timer != null) {
             timer.cancel();
@@ -67,29 +68,35 @@ public class GpsService extends Service implements LocationListener {
     }
 
     //Tarefa que é executada de x em x tempo do timer
-    public void initializeTimerTask() {
+    public void initializeTimerTask()
+    {
         timerTask = new TimerTask() {
             public void run() {
                 handler.post(new Runnable() {
                     public void run() {
 
                         boolean verif=false;
-                        Toast.makeText(getApplicationContext(),data,Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(),data,Toast.LENGTH_SHORT).show();
                         //Caso a a longitude actual seja diferente da anterior e o gps já tenha captado alguma
                         //localização
                         if(data!=null && !longitude.equals(longitudeAnterior))
                         {
                             verif = db.insertData(longitude, latitude, altitude, data,Integer.toString(viagemId));
                             longitudeAnterior=longitude;//Guardamos o valor da longitude anterior
+
+                            if(verif)
+                            {
+                                Toast.makeText(getApplicationContext(), "Dados guardados "+data, Toast.LENGTH_SHORT).show();
+                            }
                         }
-                        if(verif)
+                        /*if(verif)
                         {
                             Toast.makeText(getApplicationContext(), "Dados guardados "+data, Toast.LENGTH_SHORT).show();
                         }
                         else
                         {
                             Toast.makeText(getApplicationContext(), "Dados não guardados", Toast.LENGTH_SHORT).show();
-                        }
+                        }*/
                     }
                 });
             }
@@ -182,11 +189,6 @@ public class GpsService extends Service implements LocationListener {
         locationManager.removeUpdates(this);
     }
 
-    public static boolean getServicoIniciado()
-    {
-        return servicoIniciado;
-    }
-
     //Implementação da interface LocationService
 
     /**
@@ -226,7 +228,6 @@ public class GpsService extends Service implements LocationListener {
     @Override
     public void onProviderEnabled(String provider)
     {
-        //Toast.makeText(this, "Ligou GPS", Toast.LENGTH_LONG).show();
         if (checkPermission())
         {
             Toast.makeText(this, "Ligou GPS", Toast.LENGTH_LONG).show();
@@ -322,4 +323,9 @@ public class GpsService extends Service implements LocationListener {
     {
         return viagemId;
     }
+    public static boolean getServicoIniciado()
+    {
+        return servicoIniciado;
+    }
+    public static DBManager getDbManager(){return db;}
 }
