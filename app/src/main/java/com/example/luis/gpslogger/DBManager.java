@@ -33,7 +33,7 @@ public final class DBManager {
         private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+
                 " ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+LONGITUDE+" VARCHAR(45) ,"+
                 LATITUDE+" VARCHAR(45) ," +ALTITUDE+" VARCHAR(45) ,"+
-                DATAEHORA+" VARCHAR(45) ,"+ VIAGEMID+" VARCHAR(45) "+");";
+                DATAEHORA+" VARCHAR(45) ,"+ VIAGEMID+" INTEGER "+");";
 
         private static SQLiteDatabase db;
 
@@ -102,7 +102,7 @@ public final class DBManager {
             db.execSQL(CREATE_TABLE);
         }
 
-        public synchronized boolean insertData(String longitude, String latitude,String altitude, String dataEhora,String viagemId)
+        public synchronized boolean insertData(String longitude, String latitude,String altitude, String dataEhora,int viagemId)
         {
 
             SQLiteStatement stm = null;
@@ -140,13 +140,13 @@ public final class DBManager {
         {
             Cursor c;
 
-            c =  db.rawQuery("SELECT max(viagemId) from myTable group by viagemId", null);
-            String idViagemAnterior="";
+            c =  db.rawQuery("SELECT max(viagemId) from myTable", null);
+            int idViagemAnterior=0;
             while(c.moveToNext())
             {
-                idViagemAnterior = c.getString(0); //0 é o índice da coluna
+                idViagemAnterior = c.getInt(0); //0 é o índice da coluna
             }
-            return Integer.parseInt(idViagemAnterior);
+            return idViagemAnterior;
         }
 
         public static synchronized  double calculaKmViagem(int idViagem)

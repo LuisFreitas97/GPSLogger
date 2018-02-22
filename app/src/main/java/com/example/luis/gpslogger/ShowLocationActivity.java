@@ -14,14 +14,15 @@ import java.text.DecimalFormat;
 
 public class ShowLocationActivity extends AppCompatActivity{
 
-    private int idViagem;
-    private double distanciaKm;
+    private int idViagem=0;
+    private double distanciaKm=0;
     private TextView autonomiaText,idViagemText,percentagemBatText,distanciaKmText;
     private Button bCarregarBat;
     DecimalFormat numberFormat=new DecimalFormat("#.0");
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_location_activity);
 
@@ -39,7 +40,6 @@ public class ShowLocationActivity extends AppCompatActivity{
         idViagemText.setText("Id da última viagem: "+Integer.toString(idViagem));
 
         distanciaKm = getIntent().getDoubleExtra("distanciaKm", 0);
-        numberFormat.format(distanciaKm);//Apenas 1 casa decimal
-        distanciaKmText.setText("Distância percorrida na última viagem: " + Double.toString(distanciaKm) + " Km");
+        distanciaKmText.setText("Distância percorrida na última viagem: " + distanciaKm + " Km");
     }
 }

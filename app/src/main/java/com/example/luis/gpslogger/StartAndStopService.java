@@ -56,9 +56,11 @@ public class StartAndStopService extends AppCompatActivity {
             //Calcula os kms da última viagem
             //Toast.makeText(this,Integer.toString(GpsService.getIdViagem()),Toast.LENGTH_LONG).show();
 
-            if(GpsService.getDbManager()!=null) //Para não permitir o serviço ser parado antes de ser iniciado.
+            //Para não permitir o serviço ser parado antes de ser iniciado.
+            if(GpsService.getServicoIniciado())
             {
                 int idViagem=GpsService.getIdViagem();
+                Toast.makeText(this,Integer.toString(idViagem),Toast.LENGTH_LONG).show();
                 kmViagem = DBManager.calculaKmViagem(idViagem);
                 stopService(intent);
 

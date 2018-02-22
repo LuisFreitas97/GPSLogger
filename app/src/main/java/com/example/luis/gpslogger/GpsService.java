@@ -81,7 +81,7 @@ public class GpsService extends Service implements LocationListener {
                         //localização
                         if(data!=null && !longitude.equals(longitudeAnterior))
                         {
-                            verif = db.insertData(longitude, latitude, altitude, data,Integer.toString(viagemId));
+                            verif = db.insertData(longitude, latitude, altitude, data,viagemId);
                             longitudeAnterior=longitude;//Guardamos o valor da longitude anterior
 
                             if(verif)
@@ -160,7 +160,9 @@ public class GpsService extends Service implements LocationListener {
         }
         db = DBManager.getDBManager();
         viagemId=DBManager.getIdViagemAnterior();
+        Toast.makeText(this,Integer.toString(viagemId),Toast.LENGTH_SHORT).show();
         viagemId++;
+        Toast.makeText(this,"After "+Integer.toString(viagemId),Toast.LENGTH_SHORT).show();
 
         LocationAvailable = false;
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
