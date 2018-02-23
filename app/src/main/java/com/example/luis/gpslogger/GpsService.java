@@ -186,7 +186,7 @@ public class GpsService extends Service implements LocationListener {
     {
         super.onDestroy();
         //Mudei aqui
-        if(guardouAlgumaCoordenada)
+        if(guardouAlgumaCoordenada) //Caso durante a viagem tenha sido guardada alguma coordenada.
         {
             bateriaFinal = rand.nextInt(11);
             while (bateriaFinal >= bateriaInicial) {
@@ -196,7 +196,8 @@ public class GpsService extends Service implements LocationListener {
 
             db.updateKmBateriaFinal(kmViagem, bateriaFinal, viagemId);
         }
-        else
+        else //Caso a viagem não tenha registado nenhuma coordenada apagamos o registo da outra tabela
+        // ViagemInfo pois não faz sentido ter
         {
             //Apagar o resgisto actual que não faz sentido estar
             db.apagaInfoViagem(viagemId);
