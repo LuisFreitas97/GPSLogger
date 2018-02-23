@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -39,15 +40,20 @@ public class GpsService extends Service implements LocationListener {
     private static final int PERMISSION_REQUEST_CODE = 1;
     private boolean LocationAvailable;
 
-    //private DBSqlite db;
     private static DBManager db;
     private static boolean servicoIniciado = false;
     private static int viagemId=0;
 
     private Timer timer;    //Timer
     private TimerTask timerTask;    //Ação que irá ser desempenhada de x em x tempo.
-    private String longitude,latitude,altitude,data,longitudeAnterior;
+    private String data;
+    private double longitude,latitude,altitude,longitudeAnterior;
     private final Handler handler = new Handler();
+
+    private Random rand=new Random();
+    private int bateriaInicial,bateriaFinal;
+
+    private boolean guardouAlgumaCoordenada;
 
     public void startTimer() {
         //Cria o timer
@@ -55,7 +61,7 @@ public class GpsService extends Service implements LocationListener {
         //inicializa o trabalho que irá ser desempenhado pelo timerTask.
         initializeTimerTask();
         //o timerTask vai executar-se depois dos primeiros 5000ms e depois a cada 30000ms.
-        timer.schedule(timerTask, 5000, 30000); //
+        timer.schedule(timerTask, 5000, 10000); //
     }
 
     public void stoptimertask()
@@ -79,24 +85,17 @@ public class GpsService extends Service implements LocationListener {
                         //Toast.makeText(getApplicationContext(),data,Toast.LENGTH_SHORT).show();
                         //Caso a a longitude actual seja diferente da anterior e o gps já tenha captado alguma
                         //localização
-                        if(data!=null && !longitude.equals(longitudeAnterior))
+                        if(data!=null && longitude!=longitudeAnterior)
                         {
                             verif = db.insertData(longitude, latitude, altitude, data,viagemId);
                             longitudeAnterior=longitude;//Guardamos o valor da longitude anterior
 
                             if(verif)
                             {
+                                guardouAlgumaCoordenada=true;
                                 Toast.makeText(getApplicationContext(), "Dados guardados "+data, Toast.LENGTH_SHORT).show();
                             }
                         }
-                        /*if(verif)
-                        {
-                            Toast.makeText(getApplicationContext(), "Dados guardados "+data, Toast.LENGTH_SHORT).show();
-                        }
-                        else
-                        {
-                            Toast.makeText(getApplicationContext(), "Dados não guardados", Toast.LENGTH_SHORT).show();
-                        }*/
                     }
                 });
             }
@@ -105,13 +104,13 @@ public class GpsService extends Service implements LocationListener {
 
     /*Passar de coordenadas para graus*/
 
-    public static double getDistanceFromLatLonInKm(String lat1,String lon1,String lat2,String lon2)
+    public static double getDistanceFromLatLonInKm(double lat1,double lon1,double lat2,double lon2)
     {
         int R = 6371; // Raio da Terra em km
-        double dLat = degToRad(Double.parseDouble(lat2)-Double.parseDouble(lat1));  // Graus para rad
-        double dLon = degToRad(Double.parseDouble(lon2)-Double.parseDouble(lon1));
+        double dLat = degToRad(lat2-lat1);  // Graus para rad
+        double dLon = degToRad(lon2-lon1);
         double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(degToRad(Double.parseDouble(lat1))) * Math.cos(degToRad(Double.parseDouble(lat2))) *
+                Math.cos(degToRad(lat1)) * Math.cos(degToRad(lat2)) *
                                 Math.sin(dLon/2) * Math.sin(dLon/2)
                 ;
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
@@ -160,9 +159,11 @@ public class GpsService extends Service implements LocationListener {
         }
         db = DBManager.getDBManager();
         viagemId=DBManager.getIdViagemAnterior();
-        Toast.makeText(this,Integer.toString(viagemId),Toast.LENGTH_SHORT).show();
         viagemId++;
-        Toast.makeText(this,"After "+Integer.toString(viagemId),Toast.LENGTH_SHORT).show();
+        guardouAlgumaCoordenada=false;
+        //Mudei aqui
+        bateriaInicial = rand.nextInt(11);
+        db.insertViagemIdBateriaInicial(viagemId,bateriaInicial);
 
         LocationAvailable = false;
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -184,6 +185,23 @@ public class GpsService extends Service implements LocationListener {
     public void onDestroy()
     {
         super.onDestroy();
+        //Mudei aqui
+        if(guardouAlgumaCoordenada)
+        {
+            bateriaFinal = rand.nextInt(11);
+            while (bateriaFinal >= bateriaInicial) {
+                bateriaFinal = rand.nextInt(11);
+            }
+            double kmViagem = DBManager.calculaKmViagem(viagemId);
+
+            db.updateKmBateriaFinal(kmViagem, bateriaFinal, viagemId);
+        }
+        else
+        {
+            //Apagar o resgisto actual que não faz sentido estar
+            db.apagaInfoViagem(viagemId);
+        }
+
         stopSelf();
         Toast.makeText(this,"Serviço parado", Toast.LENGTH_LONG).show();
         servicoIniciado=false;
@@ -201,9 +219,9 @@ public class GpsService extends Service implements LocationListener {
     public void onLocationChanged(Location location)
     {
         data= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
-        longitude=String.valueOf(location.getLongitude());
-        latitude=String.valueOf(location.getLatitude());
-        altitude=String.valueOf(location.getAltitude());
+        longitude=location.getLongitude();
+        latitude=location.getLatitude();
+        altitude=location.getAltitude();
     }
 
     /**

@@ -4,40 +4,42 @@ package com.example.luis.gpslogger;
  * Created by luis on 09-02-2018.
  */
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
-
-import com.google.android.gms.games.GamesMetadata;
-
 import java.io.File;
-import java.util.ArrayList;
+import java.sql.Statement;
 
 public final class DBManager {
 
         private static final String MODULE = "Db Manager";
 
         private static final String DATABASE_NAME = "myDatabase.sqlite";
-        private static final String TABLE_NAME = "myTable";
-        private static final int DATABASE_Version = 1;
+        private static final String TABLE_GPS_LOGGER = "GpsLogger";
+        private static final String ID="ID";
         private static final String LONGITUDE="longitude";
         private static final String LATITUDE="latitude";
         private static final String ALTITUDE="altitude";
         private static final String DATAEHORA="dataEhora";
-        private static final String ID="ID";
         private static final String VIAGEMID="viagemId";
-        private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+
-                " ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+LONGITUDE+" VARCHAR(45) ,"+
-                LATITUDE+" VARCHAR(45) ," +ALTITUDE+" VARCHAR(45) ,"+
+
+        private static final String CREATE_TABLE_GPS_LOGGER = "CREATE TABLE "+TABLE_GPS_LOGGER+
+                " ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+LONGITUDE+" DOUBLE ,"+
+                LATITUDE+" DOUBLE ," +ALTITUDE+" DOUBLE ,"+
                 DATAEHORA+" VARCHAR(45) ,"+ VIAGEMID+" INTEGER "+");";
 
-        private static SQLiteDatabase db;
+        private static final String TABLE_VIAGEM_INFO="ViagemInfo";
+        private static final String BATERIAINICIAL="bateriaInicial";
+        private static final String BATERIAFINAL="bateriaFinal";
+        private static final String DISTANCIAKM="distanciaKm";
 
-        public long last_evt_Inserted;
+      private static final String CREATE_TABLE_VIAGEM_INFO="CREATE TABLE "+TABLE_VIAGEM_INFO+
+                "("+VIAGEMID+" INTEGER, "+BATERIAINICIAL+" INTEGER, "+BATERIAFINAL+" INTEGER, "+
+    DISTANCIAKM+" DOUBLE, FOREIGN KEY ("+VIAGEMID+") REFERENCES "+TABLE_GPS_LOGGER+"("+VIAGEMID+")"+");";
+
+      private static SQLiteDatabase db;
 
         public DBManager() {
 
@@ -99,10 +101,11 @@ public final class DBManager {
                     null,
                     SQLiteDatabase.CREATE_IF_NECESSARY);
             // create anchor events table
-            db.execSQL(CREATE_TABLE);
+            db.execSQL(CREATE_TABLE_GPS_LOGGER);
+            db.execSQL(CREATE_TABLE_VIAGEM_INFO);
         }
 
-        public synchronized boolean insertData(String longitude, String latitude,String altitude, String dataEhora,int viagemId)
+        public synchronized boolean insertData(double longitude, double latitude,double altitude, String dataEhora,int viagemId)
         {
 
             SQLiteStatement stm = null;
@@ -112,7 +115,9 @@ public final class DBManager {
             try{
 
             String sql="";
-                sql="Insert Into myTable('"+LONGITUDE+"','"+LATITUDE+"','"+ALTITUDE+"','"+DATAEHORA+"','"+VIAGEMID+"') values('"+longitude+"','"+latitude+"','"+altitude+"','"+dataEhora+"','"+viagemId+"')";
+
+                sql="INSERT INTO "+TABLE_GPS_LOGGER+"("+LONGITUDE+","+LATITUDE+","+ALTITUDE+","+DATAEHORA+","+VIAGEMID+")" +
+                        "VALUES("+longitude+","+latitude+","+altitude+",'"+dataEhora+"',"+viagemId+")";
                 Log.i("sdf",sql);
                 stm = db.compileStatement(sql);
                 Log.i("sdf",sql);
@@ -140,7 +145,7 @@ public final class DBManager {
         {
             Cursor c;
 
-            c =  db.rawQuery("SELECT max(viagemId) from myTable", null);
+            c=db.rawQuery("SELECT MAX("+VIAGEMID+") FROM "+TABLE_GPS_LOGGER,null);
             int idViagemAnterior=0;
             while(c.moveToNext())
             {
@@ -153,9 +158,9 @@ public final class DBManager {
         {
             Cursor c;
 
-            c=db.rawQuery("Select longitude,latitude from myTable where viagemId='"+idViagem+"'",null);
+            c=db.rawQuery("SELECT "+LONGITUDE+","+LATITUDE+" FROM "+TABLE_GPS_LOGGER+" WHERE "+VIAGEMID+"="+idViagem,null);
 
-            String longAnterior="",latAnterior="", longSeguinte="",latSeguinte="";
+            double longAnterior=0,latAnterior=0,longSeguinte=0,latSeguinte=0;
             double kmTotalViagem=0;
             int i=0;
 
@@ -163,20 +168,126 @@ public final class DBManager {
             {
                 if(i==0)
                 {
-                    longAnterior = c.getString(0);
-                    latAnterior=c.getString(1);
+                    longAnterior = c.getDouble(0);
+                    latAnterior=c.getDouble(1);
                     i++;
                 }
                 else
                 {
-                    longSeguinte=c.getString(0);
-                    latSeguinte=c.getString(1);
+                    longSeguinte=c.getDouble(0);
+                    latSeguinte=c.getDouble(1);
                     kmTotalViagem+=GpsService.getDistanceFromLatLonInKm(latAnterior,longAnterior,latSeguinte,longSeguinte);
-                    //Log.i("dsf",longAnterior+","+latAnterior+","+longSeguinte+","+latSeguinte);
                     longAnterior=longSeguinte;
                     latAnterior=latSeguinte;
                 }
             }
             return kmTotalViagem;
+        }
+
+        /*Método para quando é iniciada uma viagem guardar o id dessa viagem que se vai iniciar
+        * e também guardar a percentagem de bateria antes da viagem começar*/
+        public synchronized boolean insertViagemIdBateriaInicial(int idViagem,int percentagemBateriaInicial)
+        {
+            SQLiteStatement stm = null;
+            boolean res=false;
+            db.beginTransaction();
+
+            try{
+
+                String sql="";
+
+               sql="INSERT INTO "+TABLE_VIAGEM_INFO+"("+VIAGEMID+","+BATERIAINICIAL+")"+
+                " VALUES("+idViagem+","+percentagemBateriaInicial+")";
+
+                stm = db.compileStatement(sql);
+                Log.i("sdfsd",sql);
+                if (stm.executeInsert() <= 0)
+                {
+                    Log.i(MODULE, "Failed insertion of appliance into database");
+                }
+                res = true;
+
+                db.setTransactionSuccessful();
+            } catch (Exception e) {
+                res=false;
+                e.printStackTrace();
+            } finally	{
+                stm.close();
+                db.endTransaction();
+                Log.d(MODULE, "new appliance data inserted");
+
+            }
+            return true;
+        }
+
+        /*Método para após a viagem terminar guardar os kms correspondentes a essa distância e
+        * a percentagem de bateria final*/
+        public boolean updateKmBateriaFinal(double kmViagem,int bateriaFinal,int viagemId)
+        {
+            SQLiteStatement stm = null;
+            boolean res=false;
+            db.beginTransaction();
+
+            try{
+
+                String sql="";
+
+                sql="UPDATE "+TABLE_VIAGEM_INFO+" SET "+BATERIAFINAL+"="+bateriaFinal+","
+                +DISTANCIAKM+"="+kmViagem+" WHERE "+VIAGEMID+"="+viagemId;
+                Log.i("query: ",sql);
+
+                stm = db.compileStatement(sql);
+
+                if (stm.executeInsert() <= 0)
+                {
+                    Log.i(MODULE, "Failed insertion of appliance into database");
+                }
+                res = true;
+
+                db.setTransactionSuccessful();
+            } catch (Exception e) {
+                res=false;
+                e.printStackTrace();
+            } finally	{
+                stm.close();
+                db.endTransaction();
+                Log.d(MODULE, "new appliance data inserted");
+
+            }
+            return true;
+        }
+
+        public synchronized boolean apagaInfoViagem(int viagemId)
+        {
+            SQLiteStatement stm = null;
+            boolean res=false;
+            db.beginTransaction();
+
+            try{
+
+                String sql="";
+
+                sql="DELETE FROM "+TABLE_VIAGEM_INFO+" WHERE "+VIAGEMID+"="+viagemId;
+                Log.i("query: ",sql);
+
+                stm = db.compileStatement(sql);
+
+                if (stm.executeInsert() <= 0)
+                {
+                    Log.i(MODULE, "Failed insertion of appliance into database");
+                }
+                res = true;
+
+                db.setTransactionSuccessful();
+            } catch (Exception e) {
+                res=false;
+                e.printStackTrace();
+            } finally	{
+                stm.close();
+                db.endTransaction();
+                Log.d(MODULE, "new appliance data inserted");
+
+            }
+            return true;
         }
     }
