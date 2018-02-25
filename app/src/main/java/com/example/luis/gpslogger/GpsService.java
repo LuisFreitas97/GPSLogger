@@ -27,6 +27,8 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static android.content.Intent.getIntent;
+
 /**
  * Created by luis on 05-02-2018.
  */
@@ -148,22 +150,14 @@ public class GpsService extends Service implements LocationListener {
     public void onCreate() {
 
         super.onCreate();
+        db=StartAndStopService.getDb();
 
-        if (!DBManager.databaseExists())
-        {
-            DBManager.initDatabase();
-        }
-        else
-        {
-            Log.i("sdf", "Database já existe");
-        }
-        db = DBManager.getDBManager();
         viagemId=DBManager.getIdViagemAnterior();
         viagemId++;
         guardouAlgumaCoordenada=false;
         //Mudei aqui
         bateriaInicial = rand.nextInt(11);
-        db.insertViagemIdBateriaInicial(viagemId,bateriaInicial);
+        db.insertViagemIdBateriaInicialData(viagemId,bateriaInicial,StartAndStopService.getIdCarro());//Passar idCarro também
 
         LocationAvailable = false;
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);

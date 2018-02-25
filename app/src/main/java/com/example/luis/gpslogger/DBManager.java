@@ -9,8 +9,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
+
 import java.io.File;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public final class DBManager {
 
@@ -34,10 +38,19 @@ public final class DBManager {
         private static final String BATERIAINICIAL="bateriaInicial";
         private static final String BATERIAFINAL="bateriaFinal";
         private static final String DISTANCIAKM="distanciaKm";
+        private static final String DATA="data";
+        private static final String CARROID="carroId";
 
       private static final String CREATE_TABLE_VIAGEM_INFO="CREATE TABLE "+TABLE_VIAGEM_INFO+
                 "("+VIAGEMID+" INTEGER, "+BATERIAINICIAL+" INTEGER, "+BATERIAFINAL+" INTEGER, "+
-    DISTANCIAKM+" DOUBLE, FOREIGN KEY ("+VIAGEMID+") REFERENCES "+TABLE_GPS_LOGGER+"("+VIAGEMID+")"+");";
+    DISTANCIAKM+" DOUBLE, "+DATA+" STRING, "+CARROID+" INTEGER, "+ "FOREIGN KEY ("+VIAGEMID+") REFERENCES "+TABLE_GPS_LOGGER+
+              "("+VIAGEMID+")"+");";
+
+      private static final String TABLE_REGISTO_DIARIO="RegistoDiario";
+      private static final String DISTANCIADIARIA="distanciaDiariaKm";
+
+      private static final String CREATE_TABLE_REGISTO="CREATE TABLE "+TABLE_REGISTO_DIARIO+
+              "("+DATA+" STRING,"+DISTANCIADIARIA+" DOUBLE)";
 
       private static SQLiteDatabase db;
 
@@ -103,6 +116,7 @@ public final class DBManager {
             // create anchor events table
             db.execSQL(CREATE_TABLE_GPS_LOGGER);
             db.execSQL(CREATE_TABLE_VIAGEM_INFO);
+            db.execSQL(CREATE_TABLE_REGISTO);
         }
 
         public synchronized boolean insertData(double longitude, double latitude,double altitude, String dataEhora,int viagemId)
@@ -186,8 +200,9 @@ public final class DBManager {
 
         /*Método para quando é iniciada uma viagem guardar o id dessa viagem que se vai iniciar
         * e também guardar a percentagem de bateria antes da viagem começar*/
-        public synchronized boolean insertViagemIdBateriaInicial(int idViagem,int percentagemBateriaInicial)
+        public synchronized boolean insertViagemIdBateriaInicialData(int idViagem,int bateriaInicial,int carroId)
         {
+            String data=new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
             SQLiteStatement stm = null;
             boolean res=false;
             db.beginTransaction();
@@ -196,8 +211,8 @@ public final class DBManager {
 
                 String sql="";
 
-               sql="INSERT INTO "+TABLE_VIAGEM_INFO+"("+VIAGEMID+","+BATERIAINICIAL+")"+
-                " VALUES("+idViagem+","+percentagemBateriaInicial+")";
+               sql="INSERT INTO "+TABLE_VIAGEM_INFO+"("+VIAGEMID+","+BATERIAINICIAL+","+DATA+","+CARROID+")"+
+                " VALUES("+idViagem+","+bateriaInicial+",'"+data+"',"+carroId+")";
 
                 stm = db.compileStatement(sql);
                 Log.i("sdfsd",sql);
@@ -289,5 +304,67 @@ public final class DBManager {
 
             }
             return true;
+        }
+
+        /*Método para calcular os kms feitos por um condutor durante o dia*/
+        public synchronized boolean calculaKmTotaisDiariosCond()
+        {
+            String dataActual;
+            dataActual= new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
+
+            Cursor c1;
+            c1=db.rawQuery("SELECT "+DATA+" FROM "+TABLE_REGISTO_DIARIO+" WHERE "+DATA+"='"+dataActual+"'",null);
+
+            //Caso ainda não haja um registo diário para o dia actual
+            if(!(c1.moveToFirst()) || c1.getCount()==0)
+            {
+                Log.i("sdf","CHEGUEI AQUI");
+                Cursor c;
+                c = db.rawQuery("SELECT SUM("+DISTANCIAKM+") FROM "+TABLE_VIAGEM_INFO+" WHERE "+DATA+"='"+dataActual+"'", null);
+                //c=db.rawQuery("SELECT distanciaKm From ViagemInfo Where viagemId=1",null);
+                Log.i("sdf","SELECT SUM("+DISTANCIAKM+") FROM "+TABLE_VIAGEM_INFO+" WHERE "+DATA+"='"+dataActual+"'");
+
+                double distanciaDiaria =0;
+                Log.i("ssdf",Integer.toString(c.getCount()));
+
+                //c.moveToFirst();
+                if(c.getCount()>0) {
+                    c.moveToPosition(c.getCount() - 1);
+                    distanciaDiaria = c.getDouble(0);
+                }
+
+                SQLiteStatement stm = null;
+                boolean res=false;
+                db.beginTransaction();
+
+                try{
+                    String sql = "INSERT INTO "+TABLE_REGISTO_DIARIO+"("+DATA+","+DISTANCIADIARIA+")"+
+                            "VALUES('"+dataActual+"',"+distanciaDiaria+")";
+                    Log.i("sdf",sql);
+
+                    stm = db.compileStatement(sql);
+
+                    if (stm.executeInsert() <= 0)
+                    {
+                        Log.i(MODULE, "Failed insertion of appliance into database");
+                    }
+                    res = true;
+
+                    db.setTransactionSuccessful();
+                } catch (Exception e) {
+                    res=false;
+                    e.printStackTrace();
+                } finally	{
+                    stm.close();
+                    db.endTransaction();
+                    Log.d(MODULE, "new appliance data inserted");
+
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }

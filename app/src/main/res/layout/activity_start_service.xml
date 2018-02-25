@@ -1,27 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_gravity="center"
     tools:context="com.example.luis.gpslogger.StartAndStopService">
 
     <Button
-        android:id="@+id/button3"
-        android:layout_width="wrap_content"
+        android:id="@+id/bIniciarViagem"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:onClick="iniciarServico"
-        android:text="iniciar Rota" />
+        android:layout_width="match_parent"
+        android:text="Iniciar Viagem"
+        android:onClick="iniciarServico"/>
+
+  <Button
+      android:id="@+id/bPararViagem"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Finalizar Viagem"
+      android:onClick="pararServico"/>
 
     <Button
-        android:id="@+id/button4"
-        android:layout_width="wrap_content"
+        android:id="@+id/bRegKmsDiarios"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/button3"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="64dp"
-        android:text="parar rota"
-        android:onClick="pararServico"/>
-</RelativeLayout>
+        android:text="Registar Kms Diários"
+        android:onClick="guardaKmsDiários"/>
+
+    <Button
+        android:id="@+id/bIdentificarCarro"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Identificar Tuc-Tuc"
+        android:onClick="qrCode"/>
+</LinearLayout>
